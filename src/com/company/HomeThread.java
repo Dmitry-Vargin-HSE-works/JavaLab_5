@@ -22,6 +22,7 @@ public class HomeThread extends Thread{
 
     @Override
     public void run() {
+        System.out.println("Дом начал работать.\n");
         Random random = new Random();
         int chance = 5;
         int max_chance = 100;
@@ -41,6 +42,11 @@ public class HomeThread extends Thread{
             }
             if (lifetime > 0) {
                 lifetime--;
+            }
+            try {
+                Thread.sleep(sleep_time);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -62,7 +68,13 @@ public class HomeThread extends Thread{
     }
 
     public void removePersonFromFloor(Person person, int floor) {
+        for (LiftThread lift: lifts) {
+            lift.stop();
+        }
         people.get(floor).removeIf(p -> person == p);
+        for (LiftThread lift: lifts) {
+            lift.start();
+        }
     }
 
     public void addLift(LiftThread lift) {

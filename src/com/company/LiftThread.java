@@ -14,6 +14,7 @@ public class LiftThread extends Thread{
     private int direction = 1; // 1 if a person rise, -1 if a person fall
 
     public LiftThread(HomeThread home, int max_people) {
+        people = new HashSet<Person>();
         this.id_ = ++last_id;
         setHome(home);
         this.max_people = max_people;
@@ -21,7 +22,13 @@ public class LiftThread extends Thread{
 
     @Override
     public void run() {
+        System.out.println("Лифт " + id_ + " начал работать.\n");
         while (home.is_Alive()) {
+            try {
+                Thread.sleep(home.getSleepTime());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             dumpPeople();
             try {
                 Thread.sleep(home.getSleepTime());
@@ -42,25 +49,30 @@ public class LiftThread extends Thread{
 
     public void setHome(HomeThread home) {
         this.home = home;
-        home.addLift(this);
     }
 
     public void dumpPeople() {
         for (Person person: people) {
             if (person.getEnd() == position) {
                 people.remove(person);
-                System.out.println(person + " вышел на " + position + " этаже.\n");
+                System.out.println(person + " вышел на " + position + " этаже.");
             }
         }
     }
 
     public void getPeople() {
+        HashSet<Person> personSet = new HashSet<Person>();
         for (Person person: home.getPeopleFromFloor(position)) {
-            if (person.getDirection() == direction && people.size() <= max_people) {
+            if (person.getDirection() == direction && people.size() <= max_people && person.getTakenBy() == -1) {
+                person.setTakenBy(id_);
                 people.add(person);
-                home.removePersonFromFloor(person, position);
-                System.out.println(person + " зашел в лифт.\n");
+                personSet.add(person);
+                System.out.printf("%s зашел в лифт %d.%n", person, id_);
             }
+        }
+
+        for (Person person: personSet) {
+            home.removePersonFromFloor(person, position);
         }
     }
 }
